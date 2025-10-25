@@ -20,6 +20,20 @@ func NewHTTPHandlers(bookList *mylibrary.List) *HTTPHandler {
 	}
 }
 
+/*
+pattern: /books
+method:  POST
+info:    JSON in HTTP request body
+
+succeed:
+  - status code:   201 Created
+  - response body: JSON represent created task
+
+failed:
+  - status code:   400, 409, 500, ...
+  - response body: JSON with error + time
+*/
+
 func (h *HTTPHandler) HandleCreateBook(w http.ResponseWriter, r *http.Request){
 	var bookDTO BookDTO
 	if err := json.NewDecoder(r.Body).Decode(&bookDTO); err != nil{
@@ -61,6 +75,20 @@ func (h *HTTPHandler) HandleCreateBook(w http.ResponseWriter, r *http.Request){
 	}
 }
 
+/*
+pattern: /books/{title}
+method:  GET
+info:    pattern
+
+succeed:
+  - status code: 200 Ok
+  - response body: JSON represented found task
+
+failed:
+  - status code: 400, 404, 500, ...
+  - response body: JSON with error + time
+*/
+
 func (h *HTTPHandler) HandleGetBook(w http.ResponseWriter, r *http.Request) {
 	title := mux.Vars(r)["title"]
 
@@ -92,6 +120,20 @@ func (h *HTTPHandler) HandleGetBook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+pattern: /books
+method:  GET
+info:    -
+
+succeed:
+  - status code: 200 Ok
+  - response body: JSON represented found tasks
+
+failed:
+  - status code: 400, 500, ...
+  - response body: JSON with error + time
+*/
+
 func (h *HTTPHandler)HandleGetAllBooks(w http.ResponseWriter, r *http.Request) {
 	books := h.bookList.ListBooks()
 	b, err := json.MarshalIndent(books, "", "    ")
@@ -105,6 +147,20 @@ func (h *HTTPHandler)HandleGetAllBooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+/*
+pattern: /tasks?completed=false
+method:  GET
+info:    query params
+
+succeed:
+  - status code: 200 Ok
+  - response body: JSON represented found tasks
+
+failed:
+  - status code: 400, 500, ...
+  - response body: JSON with error + time
+*/
 
 func (h *HTTPHandler)HandleGetAllUnreadedBooks(w http.ResponseWriter, r *http.Request){
 	unreadedBooks := h.bookList.ListUnreadedBooks()
@@ -120,6 +176,20 @@ func (h *HTTPHandler)HandleGetAllUnreadedBooks(w http.ResponseWriter, r *http.Re
 	}
 }
 
+/*
+pattern: /tasks?completed=true
+method:  GET
+info:    query params
+
+succeed:
+  - status code: 200 Ok
+  - response body: JSON represented found tasks
+
+failed:
+  - status code: 400, 500, ...
+  - response body: JSON with error + time
+*/
+
 func (h *HTTPHandler)HandleGetAllReadedBooks(w http.ResponseWriter, r *http.Request){
 	unreadedBooks := h.bookList.ListReadedBooks()
 	b, err := json.MarshalIndent(unreadedBooks, "", "    ")
@@ -134,6 +204,20 @@ func (h *HTTPHandler)HandleGetAllReadedBooks(w http.ResponseWriter, r *http.Requ
 	}
 }
 
+/*
+pattern: /books/{title}
+method:  PATCH
+info:    pattern + JSON in request body
+
+succeed:
+  - status code: 200 Ok
+  - response body: JSON represented changed task
+
+failed:
+  - status code: 400, 409, 500, ...
+  - response body: JSON with error + time
+*/
+
 func (h *HTTPHandler)HandleReadBook(w http.ResponseWriter, r *http.Request){
 	var readDTO ReadBookDTO
 	if err := json.NewDecoder(r.Body).Decode(&readDTO); err != nil{
@@ -143,17 +227,16 @@ func (h *HTTPHandler)HandleReadBook(w http.ResponseWriter, r *http.Request){
 		}
 
 		http.Error(w, errDTO.ToString(), http.StatusBadRequest)
+		return
 	}
 
 	title := mux.Vars(r)["title"]
 
-	var changedBook mylibrary.Book
-	var err error
+	var	changedBook mylibrary.Book
+	var	err error
 
-	if readDTO.Read{
-		changedBook, err = h.bookList.ReadBook(title)
-	}
-
+	changedBook, err = h.bookList.ReadBook(title)
+	
 	if err != nil{
 		errDTO := ErrorDTO{
 			Message: err.Error(),
@@ -179,6 +262,20 @@ func (h *HTTPHandler)HandleReadBook(w http.ResponseWriter, r *http.Request){
 		return
 	}
 }
+
+/*
+pattern: /books/{title}
+method:  DELETE
+info:    pattern
+
+succeed:
+  - status code: 204 No Content
+  - response body: -
+
+failed:
+  - status code: 400, 404, 500, ...
+  - response body: JSON with error + time
+*/
 
 func (h *HTTPHandler)DeleteBook(w http.ResponseWriter, r *http.Request){
 	title := mux.Vars(r)["title"]

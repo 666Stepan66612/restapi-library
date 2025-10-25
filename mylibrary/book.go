@@ -29,8 +29,8 @@ func AddBook(title string, author string, pages int, text string) Book{
 }
 
 func (b *Book)Read() {
-	ReadAt := time.Now()
+	readedAt := time.Now()
 
 	b.Readed = true
-	b.ReadedAt = &ReadAt	
+	b.ReadedAt = &readedAt
 }
