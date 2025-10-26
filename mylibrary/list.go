@@ -1,42 +1,55 @@
 package mylibrary
 
-type List struct{
-	Books map[string]Book
+import "sync"
+
+type List struct {
+	books map[string]Book
+	mtx   sync.RWMutex
 }
 
-func NewBook() *List{
+func NewBook() *List {
 	return &List{
-		Books: make(map[string]Book),
+		books: make(map[string]Book),
 	}
 }
 
-func (l *List)AddBook(book Book) error{
-	for k, _ := range l.Books {
-		if k == book.Title{
-			return ErrBookAlreadyInLibrary
-		}
+func (l *List) AddBook(book Book) error {
+	l.mtx.Lock()
+	defer l.mtx.Unlock()
+
+	if _, ok := l.books[book.Title]; ok{
+		return ErrBookAlreadyInLibrary
 	}
-	l.Books[book.Title] = book
+	l.books[book.Title] = book
 
 	return nil
 }
 
-func (l *List)GetBook(title string) (Book, error){
-	book, err := l.Books[title]
-	if !err{
+func (l *List) GetBook(title string) (Book, error) {
+	l.mtx.RLock()
+	defer l.mtx.RUnlock()
+	
+	book, err := l.books[title]
+	if !err {
 		return Book{}, ErrBookNotFound
 	}
 
 	return book, nil
 }
 
-func (l *List) ListBooks() map[string]Book{
-	return l.Books
+func (l *List) ListBooks() map[string]Book {
+	l.mtx.RLock()
+	defer l.mtx.RUnlock()
+
+	return l.books
 }
 
 func (l *List) ListUnreadedBooks() map[string]Book {
+	l.mtx.RLock()
+	defer l.mtx.RUnlock()
+
 	unreadBooks := make(map[string]Book)
-	for title, book := range l.Books{
+	for title, book := range l.books {
 		if !book.Readed {
 			unreadBooks[title] = book
 		}
@@ -46,8 +59,11 @@ func (l *List) ListUnreadedBooks() map[string]Book {
 }
 
 func (l *List) ListReadedBooks() map[string]Book {
+	l.mtx.Lock()
+	defer l.mtx.Unlock()
+
 	readBooks := make(map[string]Book)
-	for title, book := range l.Books{
+	for title, book := range l.books {
 		if book.Readed {
 			readBooks[title] = book
 		}
@@ -56,22 +72,30 @@ func (l *List) ListReadedBooks() map[string]Book {
 	return readBooks
 }
 
-func (l *List) ReadBook(title string) (Book, error){
-	book, ok := l.Books[title]
+func (l *List) ReadBook(title string) (Book, error) {
+	l.mtx.Lock()
+	defer l.mtx.Unlock()
+
+	book, ok := l.books[title]
 	if !ok {
 		return Book{}, ErrBookNotFound
 	}
+
 	book.Read()
+
 	return book, nil
 }
 
-func (l *List) DeleteBook(title string) error{
-	_, ok := l.Books[title]
+func (l *List) DeleteBook(title string) error {
+	l.mtx.Lock()
+	defer l.mtx.Unlock()
+	
+	_, ok := l.books[title]
 	if !ok {
 		return ErrBookNotFound
 	}
 
-	delete(l.Books, title)
+	delete(l.books, title)
 
 	return nil
 }
