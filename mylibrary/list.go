@@ -37,7 +37,25 @@ func (l *List) GetBook(title string) (Book, error) {
 	return book, nil
 }
 
-func (l *List) ListBooks() map[string]Book {
+func (l *List) GetAuthorsBooks(author string) (map[string]Book, error) {
+	l.mtx.RLock()
+	defer l.mtx.RUnlock()
+	
+	tmp := make(map[string]Book, len(l.books))
+	for k := range l.books{
+		if l.books[k].Author == author{
+			tmp[k] = l.books[k]
+		}
+	}
+
+	if len(tmp) == 0{
+		return tmp, ErrAuthorNotFound
+	}
+
+	return tmp, nil
+}
+
+func (l *List) ListBooks() map[string]Book{
 	l.mtx.RLock()
 	defer l.mtx.RUnlock()
 
@@ -89,7 +107,7 @@ func (l *List) ReadBook(title string) (Book, error) {
 func (l *List) DeleteBook(title string) error {
 	l.mtx.Lock()
 	defer l.mtx.Unlock()
-	
+
 	_, ok := l.books[title]
 	if !ok {
 		return ErrBookNotFound

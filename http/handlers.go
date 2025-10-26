@@ -27,7 +27,7 @@ info:    JSON in HTTP request body
 
 succeed:
   - status code:   201 Created
-  - response body: JSON represent created task
+  - response body: JSON represent created book
 
 failed:
   - status code:   400, 409, 500, ...
@@ -76,13 +76,13 @@ func (h *HTTPHandler) HandleCreateBook(w http.ResponseWriter, r *http.Request){
 }
 
 /*
-pattern: /books/{title}
+pattern: /books/title/{title}
 method:  GET
 info:    pattern
 
 succeed:
   - status code: 200 Ok
-  - response body: JSON represented found task
+  - response body: JSON represented found book
 
 failed:
   - status code: 400, 404, 500, ...
@@ -109,6 +109,51 @@ func (h *HTTPHandler) HandleGetBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b, err := json.MarshalIndent(book, "", "    ")
+	if err != nil{
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(b); err != nil{
+		fmt.Println("failed to write http response:", err)
+		return
+	}
+}
+
+/*
+pattern: /books/author/{author}
+method:  GET
+info:    pattern
+
+succeed:
+  - status code: 200 Ok
+  - response body: JSON represented found books
+
+failed:
+  - status code: 400, 404, 500, ...
+  - response body: JSON with error + time
+*/
+
+func (h *HTTPHandler) HandleGetAuthorsBooks(w http.ResponseWriter, r *http.Request) {
+	author := mux.Vars(r)["author"]
+
+	books, err := h.bookList.GetAuthorsBooks(author)
+	if err != nil {
+		errDTO := ErrorDTO{
+			Message: err.Error(),
+			Time: time.Now(),
+		}
+
+		if errors.Is(err, mylibrary.ErrAuthorNotFound){
+			http.Error(w, errDTO.ToString(), http.StatusNotFound)
+		}else{
+			http.Error(w, errDTO.ToString(), http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	b, err := json.MarshalIndent(books, "", "    ")
 	if err != nil{
 		panic(err)
 	}
@@ -211,7 +256,7 @@ info:    pattern + JSON in request body
 
 succeed:
   - status code: 200 Ok
-  - response body: JSON represented changed task
+  - response body: JSON represented changed book
 
 failed:
   - status code: 400, 409, 500, ...
@@ -277,7 +322,7 @@ failed:
   - response body: JSON with error + time
 */
 
-func (h *HTTPHandler)DeleteBook(w http.ResponseWriter, r *http.Request){
+func (h *HTTPHandler)HandleDeleteBook(w http.ResponseWriter, r *http.Request){
 	title := mux.Vars(r)["title"]
 
 	if err := h.bookList.DeleteBook(title); err != nil{

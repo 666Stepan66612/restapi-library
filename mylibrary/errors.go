@@ -4,3 +4,4 @@ import "errors"
 
 var ErrBookNotFound = errors.New("book not found")
 var ErrBookAlreadyInLibrary = errors.New("book already in library")
+var ErrAuthorNotFound = errors.New("author not found")
