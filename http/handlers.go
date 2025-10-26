@@ -127,7 +127,7 @@ info:    -
 
 succeed:
   - status code: 200 Ok
-  - response body: JSON represented found tasks
+  - response body: JSON represented found books
 
 failed:
   - status code: 400, 500, ...
@@ -149,13 +149,13 @@ func (h *HTTPHandler)HandleGetAllBooks(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
-pattern: /tasks?completed=false
+pattern: /books?completed=false
 method:  GET
 info:    query params
 
 succeed:
   - status code: 200 Ok
-  - response body: JSON represented found tasks
+  - response body: JSON represented found books
 
 failed:
   - status code: 400, 500, ...
@@ -177,13 +177,13 @@ func (h *HTTPHandler)HandleGetAllUnreadedBooks(w http.ResponseWriter, r *http.Re
 }
 
 /*
-pattern: /tasks?completed=true
+pattern: /books?completed=true
 method:  GET
 info:    query params
 
 succeed:
   - status code: 200 Ok
-  - response body: JSON represented found tasks
+  - response body: JSON represented found books
 
 failed:
   - status code: 400, 500, ...
